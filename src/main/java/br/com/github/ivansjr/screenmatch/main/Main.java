@@ -12,8 +12,8 @@ import java.util.stream.Collectors;
 
 public class Main {
 
-    public static final String APY_URL_VALUE = System.getenv("APY_URL_VALUE");
-    public static final String APY_KEY_VALUE = System.getenv("APY_KEY_VALUE");
+    public static final String API_URL_VALUE = System.getenv("API_URL_VALUE");
+    public static final String API_KEY_VALUE = System.getenv("API_KEY_VALUE");
 
     private final Scanner scanner = new Scanner(System.in);
     private final APIConsumerService apiConsumerService = new APIConsumerService();
@@ -23,7 +23,7 @@ public class Main {
         System.out.println("Digite o nome da série: ");
         var seriesTitle = scanner.nextLine();
         String replacedSeriesTitle = seriesTitle.replaceAll(" ", "+");
-        var json = apiConsumerService.getData(APY_URL_VALUE + replacedSeriesTitle + APY_KEY_VALUE);
+        var json = apiConsumerService.getData(API_URL_VALUE + replacedSeriesTitle + API_KEY_VALUE);
         SerieData serieData = dataConverterService.dataConverter(json, SerieData.class);
 
         System.out.println("---------------------------------------------------------------------");
@@ -37,7 +37,7 @@ public class Main {
         List<SeasonData> seasonDataList = new ArrayList<>();
         for (int i = 1; i<=serieData.totalSeasons(); i++) {
             json = apiConsumerService.getData(
-            APY_URL_VALUE + replacedSeriesTitle + "&Season=" + i + APY_KEY_VALUE
+            API_URL_VALUE + replacedSeriesTitle + "&Season=" + i + API_KEY_VALUE
             );
             SeasonData seasonData = dataConverterService.dataConverter(json, SeasonData.class);
             seasonDataList.add(seasonData);
