@@ -1,14 +1,14 @@
 package br.com.github.ivansjr.screenmatch.main;
 
 import br.com.github.ivansjr.screenmatch.model.Episode;
+import br.com.github.ivansjr.screenmatch.model.EpisodeData;
 import br.com.github.ivansjr.screenmatch.model.SeasonData;
 import br.com.github.ivansjr.screenmatch.model.SerieData;
 import br.com.github.ivansjr.screenmatch.service.APIConsumerService;
 import br.com.github.ivansjr.screenmatch.service.DataConverterService;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class Main {
 
@@ -48,15 +48,61 @@ public class Main {
             seasonData -> {
                 System.out.println("Season " + seasonNumber[0]);
                 final int[] episodeNumber = {1};
-                seasonData.episodes().forEach(
-                    episode -> {
-                        System.out.println("Ep " + episodeNumber[0] + ": " + episode.title());
+                seasonData.episodeData().forEach(
+                        episodeData -> {
+                        System.out.println("Ep " + episodeNumber[0] + ": " + episodeData.title());
                         episodeNumber[0]++;
                     }
                 );
                 System.out.println("---------------------------------------------------------------------");
                 seasonNumber[0]++;
             }
+        );
+
+        System.out.println("Top 5 episódios de acordo com o IMDB");
+        List<EpisodeData> allEps = seasonDataList.stream()
+            .flatMap(t -> t.episodeData().stream())
+            .toList();
+
+        List<EpisodeData> topFiveEpsData = allEps.stream()
+            .filter(e -> !e.imdbRating().equalsIgnoreCase("N/A"))
+            .sorted(Comparator.comparing(EpisodeData::imdbRating).reversed())
+            .limit(5)
+            .toList();
+
+        topFiveEpsData.forEach(System.out::println);
+        System.out.println("---------------------------------------------------------------------");
+
+        List<Episode> episodes = seasonDataList.stream().flatMap(
+            t -> t.episodeData().stream().map(
+                episodeData -> new Episode(t.season(), episodeData)
+            )
+        ).toList();
+
+        episodes.forEach(System.out::println);
+        System.out.println("---------------------------------------------------------------------");
+
+        System.out.println("Digite o trecho do titulo do episódio: ");
+        var partOfTitle = scanner.nextLine();
+        episodes
+            .stream()
+            .filter(
+                episode -> episode.getTitle().toLowerCase().contains(partOfTitle.toLowerCase())
+            )
+            .findFirst()
+            .ifPresent(System.out::println);
+
+        Map<Integer, Double> ratingToSeason = episodes
+            .stream()
+            .filter(episode -> episode.getImdbRating() > 0.0)
+            .collect(
+                Collectors.groupingBy(
+                    Episode::getSeason,
+                    Collectors.averagingDouble(Episode::getImdbRating)
+                )
+            );
+        ratingToSeason.forEach((season, rating) ->
+            System.out.printf("Season %d: Average Rating = %.2f%n", season, rating)
         );
     }
 }
